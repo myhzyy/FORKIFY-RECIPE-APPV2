@@ -21,10 +21,3 @@ export const getJSON = async function (url) {
     throw err;
   }
 };
-
-/// if we type the link in wrong, error will occur in the helper, which is wrong
-/// as this is from the model.js
-
-/// Throwing err makes the promise reject
-/// this is then caught in the closest catch block which will be in model
-//

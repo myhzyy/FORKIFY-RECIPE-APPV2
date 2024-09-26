@@ -15,6 +15,7 @@ const controlRecipes = async function () {
     console.log(id);
 
     if (!id) return;
+
     recipeView.renderSpinner();
 
     /// 1 Loading recipe
@@ -25,10 +26,14 @@ const controlRecipes = async function () {
     /// 2 Rendering Recipe
     recipeView.render(model.state.recipe);
   } catch (err) {
-    alert(err);
+    console.log(err);
+    recipeView.renderError();
   }
 };
 
-['hashchange', 'load'].forEach(ev =>
-  window.addEventListener(ev, controlRecipes)
-);
+/// recipeView.renderError is called if something is in the catch block
+
+const init = function () {
+  recipeView.addHandlerRender(controlRecipes);
+};
+init();

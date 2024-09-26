@@ -605,13 +605,15 @@ const controlRecipes = async function() {
         /// 2 Rendering Recipe
         (0, _recipeViewJsDefault.default).render(_modelJs.state.recipe);
     } catch (err) {
-        alert(err);
+        console.log(err);
+        (0, _recipeViewJsDefault.default).renderError();
     }
 };
-[
-    "hashchange",
-    "load"
-].forEach((ev)=>window.addEventListener(ev, controlRecipes));
+/// recipeView.renderError is called if something is in the catch block
+const init = function() {
+    (0, _recipeViewJsDefault.default).addHandlerRender(controlRecipes);
+};
+init();
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","core-js/modules/web.immediate.js":"49tUX","regenerator-runtime/runtime":"dXNgZ","./model.js":"aa1aw","./Views/recipeView.js":"o02Y5"}],"gkKU3":[function(require,module,exports) {
 exports.interopDefault = function(a) {
@@ -2484,17 +2486,23 @@ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "state", ()=>state);
 parcelHelpers.export(exports, "loadRecipe", ()=>loadRecipe);
+parcelHelpers.export(exports, "loadSearchResults", ()=>loadSearchResults);
 var _regeneratorRuntime = require("regenerator-runtime");
 var _config = require("./config");
 var _helpers = require("./helpers");
 const state = {
     recipe: {},
-    title: {}
+    title: {},
+    search: {
+        query: "",
+        results: []
+    }
 };
 console.log(state.recipe);
 const loadRecipe = async function(id) {
     try {
-        const data = await (0, _helpers.getJSON)(`${(0, _config.API_URL)}/${id}`);
+        const data = await (0, _helpers.getJSON)(`${(0, _config.API_URL)}${id}`);
+        console.log(data);
         const { recipe } = data.data;
         state.recipe = {
             id: recipe.id,
@@ -2510,15 +2518,46 @@ const loadRecipe = async function(id) {
     } catch (err) {
         // Temp error handling
         console.error(`${err} !!!`);
+        throw err;
     }
 };
+const loadSearchResults = async function(query) {
+    try {
+        state.search.query = query;
+        const data = await (0, _helpers.getJSON)(`${(0, _config.API_URL)}?search=${query}`);
+        console.log(data);
+        state.search.results = data.data.recipes.map((rec)=>{
+            return {
+                id: rec.id,
+                title: rec.title,
+                publisher: rec.publisher,
+                image: rec.image_url
+            };
+        });
+        console.log(state.search.query, state.search.results);
+    } catch (err) {
+        console.error(`${err} !!!`);
+        throw err;
+    }
+};
+loadSearchResults("pizza"); /// loadSearchResults is an async function that takes in a query
+ /// this gets the API_URL from the config module
+ /// our query then fills the rest of the query in, making a full URL
+ /// once that data object is returned,
+ /// we map over the data.recipes, and call each of the arrays rec
+ /// we then rename them in here
+ /// these will then be stored in the state object as this stores all of our data
+ /// 2
+ /// we save this map into the state.search.results by adding it on line 48
+ /// we also make state.search.query = query
+ /// this stores the word 'pizza' in thr query
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./config":"70DKu","regenerator-runtime":"dXNgZ","./helpers":"5MiOq"}],"70DKu":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "API_URL", ()=>API_URL);
 parcelHelpers.export(exports, "TIMEOUT_SEC", ()=>TIMEOUT_SEC);
-const API_URL = "https://forkify-api.herokuapp.com/api/v2/recipes";
+const API_URL = "https://forkify-api.herokuapp.com/api/v2/recipes/";
 const TIMEOUT_SEC = 10;
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"5MiOq":[function(require,module,exports) {
@@ -2547,11 +2586,7 @@ const getJSON = async function(url) {
         console.log(err);
         throw err;
     }
-}; /// if we type the link in wrong, error will occur in the helper, which is wrong
- /// as this is from the model.js
- /// Throwing err makes the promise reject
- /// this is then caught in the closest catch block which will be in model
- //
+};
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./config":"70DKu"}],"o02Y5":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
@@ -2562,27 +2597,60 @@ var _fractional = require("fractional");
 class RecipeView {
     #parentElement = document.querySelector(".recipe");
     #data;
+    #errorMessage = `We could not find that recipe. Please try another !`;
+    #message = "";
     render(data) {
         this.#data = data;
         const markup = this.#generateMarkup();
         this.#clear();
         this.#parentElement.insertAdjacentHTML("afterbegin", markup);
+        console.log(data);
     }
-    /// we store the data inside render
-    /// ever
     #clear() {
         this.#parentElement.innerHTML = "";
     }
-    renderSpinner = function() {
+    renderSpinner() {
         const markup = `
         <div class="spinner">
             <svg>
               <use href="${(0, _iconsSvgDefault.default)}#icon-loader"></use>
             </svg>
           </div>`;
-        this.#parentElement.innerHTML = "";
+        this.#clear();
         this.#parentElement.insertAdjacentHTML("afterbegin", markup);
-    };
+    }
+    addHandlerRender(handler) {
+        [
+            "hashchange",
+            "load"
+        ].forEach((ev)=>window.addEventListener(ev, handler));
+    }
+    renderError(message = this.#errorMessage) {
+        const markup = `
+    <div class="error">
+            <div>
+              <svg>
+                <use href="${(0, _iconsSvgDefault.default)}#icon-alert-triangle"></use>
+              </svg>
+            </div>
+            <p>N${message}</p>
+          </div>`;
+        this.#clear();
+        this.#parentElement.insertAdjacentHTML("afterbegin", markup);
+    }
+    renderMessage(message = this.#message) {
+        const markup = `
+    <div class="message">
+            <div>
+              <svg>
+                <use href="${(0, _iconsSvgDefault.default)}#icon-smile"></use>
+              </svg>
+            </div>
+            <p>N${message}</p>
+          </div>`;
+        this.#clear();
+        this.#parentElement.insertAdjacentHTML("afterbegin", markup);
+    }
     #generateMarkup() {
         return `
     <figure class="recipe__fig">
@@ -2674,6 +2742,8 @@ class RecipeView {
   `;
     }
 }
+/// for each of the data.ingredients
+/// we are returning the strings
 exports.default = new RecipeView();
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","url:../../img/icons.svg":"e1R5V","fractional":"3SU56"}],"e1R5V":[function(require,module,exports) {

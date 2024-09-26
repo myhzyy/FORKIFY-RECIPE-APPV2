@@ -4,31 +4,66 @@ import { Fraction } from 'fractional';
 class RecipeView {
   #parentElement = document.querySelector('.recipe');
   #data;
+  #errorMessage = `We could not find that recipe. Please try another !`;
+  #message = '';
 
   render(data) {
     this.#data = data;
     const markup = this.#generateMarkup();
     this.#clear();
     this.#parentElement.insertAdjacentHTML('afterbegin', markup);
+    console.log(data);
   }
-
-  /// we store the data inside render
-  /// ever
 
   #clear() {
     this.#parentElement.innerHTML = '';
   }
 
-  renderSpinner = function () {
+  renderSpinner() {
     const markup = `
         <div class="spinner">
             <svg>
               <use href="${icons}#icon-loader"></use>
             </svg>
           </div>`;
-    this.#parentElement.innerHTML = '';
+
+    this.#clear();
     this.#parentElement.insertAdjacentHTML('afterbegin', markup);
-  };
+  }
+
+  addHandlerRender(handler) {
+    ['hashchange', 'load'].forEach(ev => window.addEventListener(ev, handler));
+  }
+
+  renderError(message = this.#errorMessage) {
+    const markup = `
+    <div class="error">
+            <div>
+              <svg>
+                <use href="${icons}#icon-alert-triangle"></use>
+              </svg>
+            </div>
+            <p>N${message}</p>
+          </div>`;
+
+    this.#clear();
+    this.#parentElement.insertAdjacentHTML('afterbegin', markup);
+  }
+
+  renderMessage(message = this.#message) {
+    const markup = `
+    <div class="message">
+            <div>
+              <svg>
+                <use href="${icons}#icon-smile"></use>
+              </svg>
+            </div>
+            <p>N${message}</p>
+          </div>`;
+
+    this.#clear();
+    this.#parentElement.insertAdjacentHTML('afterbegin', markup);
+  }
 
   #generateMarkup() {
     return `
@@ -132,5 +167,8 @@ class RecipeView {
   `;
   }
 }
+
+/// for each of the data.ingredients
+/// we are returning the strings
 
 export default new RecipeView();
