@@ -590,9 +590,8 @@ var _modelJs = require("./model.js");
 var _recipeViewJs = require("./Views/recipeView.js");
 var _recipeViewJsDefault = parcelHelpers.interopDefault(_recipeViewJs);
 var _runtime = require("regenerator-runtime/runtime");
-const recipeContainer = document.querySelector(".recipe");
-// https://forkify-api.herokuapp.com/v2
-///////////////////////////////////////
+var _searchViewJs = require("./Views/searchView.js");
+var _searchViewJsDefault = parcelHelpers.interopDefault(_searchViewJs);
 const controlRecipes = async function() {
     try {
         const id = window.location.hash.slice(1);
@@ -609,13 +608,29 @@ const controlRecipes = async function() {
         (0, _recipeViewJsDefault.default).renderError();
     }
 };
-/// recipeView.renderError is called if something is in the catch block
+const controlSearchResults = async function() {
+    try {
+        const query = (0, _searchViewJsDefault.default).getQuery();
+        if (!query) return;
+        /// the query is equal to the searchView.getQuery, which is the value of
+        /// the search bar
+        /// if there's no query, then just return
+        /// the query is then passed into the model.loadSearchResults
+        /// this query will finish the last part of the hashchange
+        await _modelJs.loadSearchResults(query);
+        console.log(_modelJs.state.search.query, _modelJs.state.search.results);
+    } catch (err) {
+        console.log(err);
+    }
+};
+controlSearchResults();
 const init = function() {
     (0, _recipeViewJsDefault.default).addHandlerRender(controlRecipes);
+    (0, _searchViewJsDefault.default).addHandlerSearch(controlSearchResults);
 };
 init();
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","core-js/modules/web.immediate.js":"49tUX","regenerator-runtime/runtime":"dXNgZ","./model.js":"aa1aw","./Views/recipeView.js":"o02Y5"}],"gkKU3":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","core-js/modules/web.immediate.js":"49tUX","regenerator-runtime/runtime":"dXNgZ","./model.js":"aa1aw","./Views/recipeView.js":"o02Y5","./Views/searchView.js":"25sBR"}],"gkKU3":[function(require,module,exports) {
 exports.interopDefault = function(a) {
     return a && a.__esModule ? a : {
         default: a
@@ -2534,23 +2549,11 @@ const loadSearchResults = async function(query) {
                 image: rec.image_url
             };
         });
-        console.log(state.search.query, state.search.results);
     } catch (err) {
         console.error(`${err} !!!`);
         throw err;
     }
 };
-loadSearchResults("pizza"); /// loadSearchResults is an async function that takes in a query
- /// this gets the API_URL from the config module
- /// our query then fills the rest of the query in, making a full URL
- /// once that data object is returned,
- /// we map over the data.recipes, and call each of the arrays rec
- /// we then rename them in here
- /// these will then be stored in the state object as this stores all of our data
- /// 2
- /// we save this map into the state.search.results by adding it on line 48
- /// we also make state.search.query = query
- /// this stores the word 'pizza' in thr query
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./config":"70DKu","regenerator-runtime":"dXNgZ","./helpers":"5MiOq"}],"70DKu":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
@@ -3037,6 +3040,25 @@ Fraction.primeFactors = function(n) {
 };
 module.exports.Fraction = Fraction;
 
-},{}]},["3LJ3w","fstXO"], "fstXO", "parcelRequirea6cc")
+},{}],"25sBR":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+class SearchView {
+    #parentElement = document.querySelector(".search");
+    getQuery() {
+        return this.#parentElement.querySelector(".search__field").value;
+    }
+    addHandlerSearch(handler) {
+        this.#parentElement.addEventListener("submit", function(e) {
+            e.preventDefault();
+            handler();
+        });
+    }
+}
+exports.default = new SearchView(); /// searchView
+ /// this highlights the parent element, which is the whole search tab
+ /// the getQuery returns the searchfield.value
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["3LJ3w","fstXO"], "fstXO", "parcelRequirea6cc")
 
 //# sourceMappingURL=index.ec33bf00.js.map

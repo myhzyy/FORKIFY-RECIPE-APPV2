@@ -53,29 +53,8 @@ export const loadSearchResults = async function (query) {
         image: rec.image_url,
       };
     });
-
-    console.log(state.search.query, state.search.results);
   } catch (err) {
     console.error(`${err} !!!`);
     throw err;
   }
 };
-
-loadSearchResults('pizza');
-
-/// loadSearchResults is an async function that takes in a query
-
-/// this gets the API_URL from the config module
-/// our query then fills the rest of the query in, making a full URL
-
-/// once that data object is returned,
-/// we map over the data.recipes, and call each of the arrays rec
-/// we then rename them in here
-
-/// these will then be stored in the state object as this stores all of our data
-
-/// 2
-
-/// we save this map into the state.search.results by adding it on line 48
-/// we also make state.search.query = query
-/// this stores the word 'pizza' in thr query
