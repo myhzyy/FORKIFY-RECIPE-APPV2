@@ -587,15 +587,16 @@ function hmrAccept(bundle /*: ParcelRequire */ , id /*: string */ ) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 var _webImmediateJs = require("core-js/modules/web.immediate.js");
 var _modelJs = require("./model.js");
-var _recipeViewJs = require("./Views/recipeView.js");
-var _recipeViewJsDefault = parcelHelpers.interopDefault(_recipeViewJs);
-var _runtime = require("regenerator-runtime/runtime");
 var _searchViewJs = require("./Views/searchView.js");
 var _searchViewJsDefault = parcelHelpers.interopDefault(_searchViewJs);
+var _recipeViewJs = require("./Views/recipeView.js");
+var _recipeViewJsDefault = parcelHelpers.interopDefault(_recipeViewJs);
+var _resultsViewJs = require("./Views/resultsView.js");
+var _resultsViewJsDefault = parcelHelpers.interopDefault(_resultsViewJs);
+var _runtime = require("regenerator-runtime/runtime");
 const controlRecipes = async function() {
     try {
         const id = window.location.hash.slice(1);
-        console.log(id);
         if (!id) return;
         (0, _recipeViewJsDefault.default).renderSpinner();
         /// 1 Loading recipe
@@ -610,14 +611,14 @@ const controlRecipes = async function() {
 };
 const controlSearchResults = async function() {
     try {
+        (0, _resultsViewJsDefault.default).renderSpinner();
+        console.log((0, _resultsViewJsDefault.default));
+        // 1 Get search query
         const query = (0, _searchViewJsDefault.default).getQuery();
         if (!query) return;
-        /// the query is equal to the searchView.getQuery, which is the value of
-        /// the search bar
-        /// if there's no query, then just return
-        /// the query is then passed into the model.loadSearchResults
-        /// this query will finish the last part of the hashchange
+        // 2 Load search results
         await _modelJs.loadSearchResults(query);
+        // 3 Render results
         console.log(_modelJs.state.search.query, _modelJs.state.search.results);
     } catch (err) {
         console.log(err);
@@ -630,7 +631,7 @@ const init = function() {
 };
 init();
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","core-js/modules/web.immediate.js":"49tUX","regenerator-runtime/runtime":"dXNgZ","./model.js":"aa1aw","./Views/recipeView.js":"o02Y5","./Views/searchView.js":"25sBR"}],"gkKU3":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","core-js/modules/web.immediate.js":"49tUX","regenerator-runtime/runtime":"dXNgZ","./model.js":"aa1aw","./Views/recipeView.js":"o02Y5","./Views/searchView.js":"25sBR","./Views/resultsView.js":"9dRvK"}],"gkKU3":[function(require,module,exports) {
 exports.interopDefault = function(a) {
     return a && a.__esModule ? a : {
         default: a
@@ -2594,72 +2595,27 @@ const getJSON = async function(url) {
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./config":"70DKu"}],"o02Y5":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
+var _viewJs = require("./View.js");
+var _viewJsDefault = parcelHelpers.interopDefault(_viewJs);
 var _iconsSvg = require("url:../../img/icons.svg");
 var _iconsSvgDefault = parcelHelpers.interopDefault(_iconsSvg);
 var _fractional = require("fractional");
-class RecipeView {
-    #parentElement = document.querySelector(".recipe");
-    #data;
-    #errorMessage = `We could not find that recipe. Please try another !`;
-    #message = "";
-    render(data) {
-        this.#data = data;
-        const markup = this.#generateMarkup();
-        this.#clear();
-        this.#parentElement.insertAdjacentHTML("afterbegin", markup);
-        console.log(data);
-    }
-    #clear() {
-        this.#parentElement.innerHTML = "";
-    }
-    renderSpinner() {
-        const markup = `
-        <div class="spinner">
-            <svg>
-              <use href="${(0, _iconsSvgDefault.default)}#icon-loader"></use>
-            </svg>
-          </div>`;
-        this.#clear();
-        this.#parentElement.insertAdjacentHTML("afterbegin", markup);
-    }
+class RecipeView extends (0, _viewJsDefault.default) {
+    _parentElement = document.querySelector(".recipe");
+    _errorMessage = `We could not find that recipe. Please try another !`;
+    _message = "";
     addHandlerRender(handler) {
         [
             "hashchange",
             "load"
         ].forEach((ev)=>window.addEventListener(ev, handler));
     }
-    renderError(message = this.#errorMessage) {
-        const markup = `
-    <div class="error">
-            <div>
-              <svg>
-                <use href="${(0, _iconsSvgDefault.default)}#icon-alert-triangle"></use>
-              </svg>
-            </div>
-            <p>N${message}</p>
-          </div>`;
-        this.#clear();
-        this.#parentElement.insertAdjacentHTML("afterbegin", markup);
-    }
-    renderMessage(message = this.#message) {
-        const markup = `
-    <div class="message">
-            <div>
-              <svg>
-                <use href="${(0, _iconsSvgDefault.default)}#icon-smile"></use>
-              </svg>
-            </div>
-            <p>N${message}</p>
-          </div>`;
-        this.#clear();
-        this.#parentElement.insertAdjacentHTML("afterbegin", markup);
-    }
-    #generateMarkup() {
+    _generateMarkup() {
         return `
     <figure class="recipe__fig">
-    <img src="${this.#data.image}" alt="${this.#data.title}" class="recipe__img" />
+    <img src="${this._data.image}" alt="${this._data.title}" class="recipe__img" />
     <h1 class="recipe__title">
-      <span>${this.#data.title}</span>
+      <span>${this._data.title}</span>
     </h1>
   </figure>
 
@@ -2668,14 +2624,14 @@ class RecipeView {
       <svg class="recipe__info-icon">
         <use href="${0, _iconsSvgDefault.default}#icon-clock"></use>
       </svg>
-      <span class="recipe__info-data recipe__info-data--minutes">${this.#data.cookingTime}</span>
+      <span class="recipe__info-data recipe__info-data--minutes">${this._data.cookingTime}</span>
       <span class="recipe__info-text">minutes</span>
     </div>
     <div class="recipe__info">
       <svg class="recipe__info-icon">
         <use href="${0, _iconsSvgDefault.default}#icon-users"></use>
       </svg>
-      <span class="recipe__info-data recipe__info-data--people">${this.#data.servings}</span>
+      <span class="recipe__info-data recipe__info-data--people">${this._data.servings}</span>
       <span class="recipe__info-text">servings</span>
 
       <div class="recipe__info-buttons">
@@ -2708,19 +2664,19 @@ class RecipeView {
     <h2 class="heading--2">Recipe ingredients</h2>
     <ul class="recipe__ingredient-list">
 
-    ${this.#data.ingredients.map(this.#generateMarkupIngredient).join("")}
+    ${this._data.ingredients.map(this._generateMarkupIngredient).join("")}
   </div>
 
   <div class="recipe__directions">
     <h2 class="heading--2">How to cook it</h2>
     <p class="recipe__directions-text">
       This recipe was carefully designed and tested by
-      <span class="recipe__publisher">${this.#data.publisher}</span>. Please check out
+      <span class="recipe__publisher">${this._data.publisher}</span>. Please check out
       directions at their website.
     </p>
     <a
       class="btn--small recipe__btn"
-      href="${this.#data.sourceUrl}"
+      href="${this._data.sourceUrl}"
       target="_blank"
     >
       <span>Directions</span>
@@ -2730,7 +2686,7 @@ class RecipeView {
     </a>
   </div>`;
     }
-    #generateMarkupIngredient(ing) {
+    _generateMarkupIngredient(ing) {
         return `
   <li class="recipe__ingredient">
   <svg class="recipe__icon">
@@ -2749,7 +2705,7 @@ class RecipeView {
 /// we are returning the strings
 exports.default = new RecipeView();
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","url:../../img/icons.svg":"e1R5V","fractional":"3SU56"}],"e1R5V":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","url:../../img/icons.svg":"e1R5V","fractional":"3SU56","./View.js":"1V74g"}],"e1R5V":[function(require,module,exports) {
 module.exports = require("4824003d55a6bbc4").getBundleURL("iTq60") + "icons.35d27858.svg" + "?" + Date.now();
 
 },{"4824003d55a6bbc4":"lgJ39"}],"lgJ39":[function(require,module,exports) {
@@ -3040,25 +2996,101 @@ Fraction.primeFactors = function(n) {
 };
 module.exports.Fraction = Fraction;
 
-},{}],"25sBR":[function(require,module,exports) {
+},{}],"1V74g":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _iconsSvg = require("url:../../img/icons.svg");
+var _iconsSvgDefault = parcelHelpers.interopDefault(_iconsSvg);
+class View {
+    _data;
+    render(data) {
+        this._data = data;
+        const markup = this._generateMarkup();
+        this._clear();
+        this._parentElement.insertAdjacentHTML("afterbegin", markup);
+    }
+    _clear() {
+        console.log(this._parentElement);
+        this._parentElement.innerHTML = "";
+    }
+    renderSpinner() {
+        const markup = `
+        <div class="spinner">
+            <svg>
+              <use href="${(0, _iconsSvgDefault.default)}#icon-loader"></use>
+            </svg>
+          </div>`;
+        this._clear();
+        this._parentElement.insertAdjacentHTML("afterbegin", markup);
+    }
+    renderError(message = this._errorMessage) {
+        const markup = `
+      <div class="error">
+      <div>
+      <svg>
+      <use href="${(0, _iconsSvgDefault.default)}#icon-alert-triangle"></use>
+      </svg>
+      </div>
+      <p>N${message}</p>
+      </div>`;
+        this._clear();
+        this._parentElement.insertAdjacentHTML("afterbegin", markup);
+    }
+    renderMessage(message = this._message) {
+        const markup = `
+        <div class="message">
+        <div>
+        <svg>
+        <use href="${(0, _iconsSvgDefault.default)}#icon-smile"></use>
+        </svg>
+        </div>
+        <p>N${message}</p>
+        </div>`;
+        this._clear();
+        this._parentElement.insertAdjacentHTML("afterbegin", markup);
+    }
+} /// the View is the parent class, it has all the methods that are going to be shared
+ /// amongst the Views
+ ///
+exports.default = View;
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","url:../../img/icons.svg":"e1R5V"}],"25sBR":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 class SearchView {
-    #parentElement = document.querySelector(".search");
+    _parentElement = document.querySelector(".search");
     getQuery() {
-        return this.#parentElement.querySelector(".search__field").value;
+        return this._parentElement.querySelector(".search__field").value;
+    }
+    #clearInput() {
+        const query = this._parentElement.querySelector(".search__field").value = "";
+        this._clearInput();
+        return query;
     }
     addHandlerSearch(handler) {
-        this.#parentElement.addEventListener("submit", function(e) {
+        this._parentElement.addEventListener("submit", function(e) {
             e.preventDefault();
             handler();
         });
     }
 }
-exports.default = new SearchView(); /// searchView
- /// this highlights the parent element, which is the whole search tab
- /// the getQuery returns the searchfield.value
+exports.default = new SearchView();
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["3LJ3w","fstXO"], "fstXO", "parcelRequirea6cc")
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"9dRvK":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _view = require("./View");
+var _viewDefault = parcelHelpers.interopDefault(_view);
+class ResultsView extends (0, _viewDefault.default) {
+    _parentElement = document.querySelector(".results");
+}
+exports.default = new ResultsView(); /// the ReseultsView takes the properties and methods from the View
+ /// which means we will have access to these values and functions
+ /// the View is awaiting _parentElement to perform some functions
+ /// but it does not inherantly have that stored on the View itself
+ /// so when we passed the parent element in, will give it access to what to pass in
+ /// to these functions
+
+},{"./View":"1V74g","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["3LJ3w","fstXO"], "fstXO", "parcelRequirea6cc")
 
 //# sourceMappingURL=index.ec33bf00.js.map

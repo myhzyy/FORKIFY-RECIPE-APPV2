@@ -1,12 +1,19 @@
 class SearchView {
-  #parentElement = document.querySelector('.search');
+  _parentElement = document.querySelector('.search');
 
   getQuery() {
-    return this.#parentElement.querySelector('.search__field').value;
+    return this._parentElement.querySelector('.search__field').value;
+  }
+
+  #clearInput() {
+    const query = (this._parentElement.querySelector('.search__field').value =
+      '');
+    this._clearInput();
+    return query;
   }
 
   addHandlerSearch(handler) {
-    this.#parentElement.addEventListener('submit', function (e) {
+    this._parentElement.addEventListener('submit', function (e) {
       e.preventDefault();
       handler();
     });
@@ -14,8 +21,3 @@ class SearchView {
 }
 
 export default new SearchView();
-
-/// searchView
-
-/// this highlights the parent element, which is the whole search tab
-/// the getQuery returns the searchfield.value
