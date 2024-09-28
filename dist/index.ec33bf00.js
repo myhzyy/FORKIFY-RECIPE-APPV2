@@ -587,13 +587,14 @@ function hmrAccept(bundle /*: ParcelRequire */ , id /*: string */ ) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 var _webImmediateJs = require("core-js/modules/web.immediate.js");
 var _modelJs = require("./model.js");
-var _searchViewJs = require("./Views/searchView.js");
-var _searchViewJsDefault = parcelHelpers.interopDefault(_searchViewJs);
 var _recipeViewJs = require("./Views/recipeView.js");
 var _recipeViewJsDefault = parcelHelpers.interopDefault(_recipeViewJs);
+var _searchViewJs = require("./Views/searchView.js");
+var _searchViewJsDefault = parcelHelpers.interopDefault(_searchViewJs);
 var _resultsViewJs = require("./Views/resultsView.js");
 var _resultsViewJsDefault = parcelHelpers.interopDefault(_resultsViewJs);
 var _runtime = require("regenerator-runtime/runtime");
+if (module.hot) module.hot.accept();
 const controlRecipes = async function() {
     try {
         const id = window.location.hash.slice(1);
@@ -605,21 +606,20 @@ const controlRecipes = async function() {
         /// 2 Rendering Recipe
         (0, _recipeViewJsDefault.default).render(_modelJs.state.recipe);
     } catch (err) {
-        console.log(err);
         (0, _recipeViewJsDefault.default).renderError();
     }
 };
 const controlSearchResults = async function() {
     try {
         (0, _resultsViewJsDefault.default).renderSpinner();
-        console.log((0, _resultsViewJsDefault.default));
         // 1 Get search query
         const query = (0, _searchViewJsDefault.default).getQuery();
         if (!query) return;
         // 2 Load search results
         await _modelJs.loadSearchResults(query);
         // 3 Render results
-        console.log(_modelJs.state.search.query, _modelJs.state.search.results);
+        // resultsView.render(model.state.search.results);
+        (0, _resultsViewJsDefault.default).render(_modelJs.getSearchResultsPage(1));
     } catch (err) {
         console.log(err);
     }
@@ -2503,6 +2503,7 @@ parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "state", ()=>state);
 parcelHelpers.export(exports, "loadRecipe", ()=>loadRecipe);
 parcelHelpers.export(exports, "loadSearchResults", ()=>loadSearchResults);
+parcelHelpers.export(exports, "getSearchResultsPage", ()=>getSearchResultsPage);
 var _regeneratorRuntime = require("regenerator-runtime");
 var _config = require("./config");
 var _helpers = require("./helpers");
@@ -2511,10 +2512,10 @@ const state = {
     title: {},
     search: {
         query: "",
-        results: []
+        results: [],
+        resultsPerPage: (0, _config.RES_PER_PAGE)
     }
 };
-console.log(state.recipe);
 const loadRecipe = async function(id) {
     try {
         const data = await (0, _helpers.getJSON)(`${(0, _config.API_URL)}${id}`);
@@ -2555,14 +2556,21 @@ const loadSearchResults = async function(query) {
         throw err;
     }
 };
+const getSearchResultsPage = function(page) {
+    const start = (page - 1) * state.search.resultsPerPage;
+    const end = page * state.search.resultsPerPage;
+    return state.search.results.slice(start, end);
+};
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./config":"70DKu","regenerator-runtime":"dXNgZ","./helpers":"5MiOq"}],"70DKu":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "API_URL", ()=>API_URL);
 parcelHelpers.export(exports, "TIMEOUT_SEC", ()=>TIMEOUT_SEC);
+parcelHelpers.export(exports, "RES_PER_PAGE", ()=>RES_PER_PAGE);
 const API_URL = "https://forkify-api.herokuapp.com/api/v2/recipes/";
 const TIMEOUT_SEC = 10;
+const RES_PER_PAGE = 10;
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"5MiOq":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
@@ -2649,9 +2657,6 @@ class RecipeView extends (0, _viewJsDefault.default) {
     </div>
 
     <div class="recipe__user-generated">
-      <svg>
-        <use href="${0, _iconsSvgDefault.default}#icon-user"></use>
-      </svg>
     </div>
     <button class="btn--round">
       <svg class="">
@@ -3004,13 +3009,13 @@ var _iconsSvgDefault = parcelHelpers.interopDefault(_iconsSvg);
 class View {
     _data;
     render(data) {
+        if (!data || Array.isArray(data) && data.length === 0) return this.renderError();
         this._data = data;
         const markup = this._generateMarkup();
         this._clear();
         this._parentElement.insertAdjacentHTML("afterbegin", markup);
     }
     _clear() {
-        console.log(this._parentElement);
         this._parentElement.innerHTML = "";
     }
     renderSpinner() {
@@ -3031,7 +3036,7 @@ class View {
       <use href="${(0, _iconsSvgDefault.default)}#icon-alert-triangle"></use>
       </svg>
       </div>
-      <p>N${message}</p>
+      <p>${message}</p>
       </div>`;
         this._clear();
         this._parentElement.insertAdjacentHTML("afterbegin", markup);
@@ -3081,16 +3086,33 @@ var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 var _view = require("./View");
 var _viewDefault = parcelHelpers.interopDefault(_view);
+var _iconsSvg = require("url:../../img/icons.svg");
+var _iconsSvgDefault = parcelHelpers.interopDefault(_iconsSvg);
 class ResultsView extends (0, _viewDefault.default) {
     _parentElement = document.querySelector(".results");
+    _errorMessage = `No recipes found for your query! Please try again!`;
+    _message = "";
+    _generateMarkup() {
+        console.log(this._data);
+        return this._data.map(this._generateMarkupPreview).join("");
+    }
+    _generateMarkupPreview(result) {
+        return `
+    <li class="preview">
+    <a class="preview__link" href="#${result.id}">
+      <figure class="preview__fig">
+        <img src="${result.image}" alt="${result.title}" />
+      </figure>
+      <div class="preview__data">
+        <h4 class="preview__title">${result.title}</h4>
+        <p class="preview__publisher">${result.publisher}</p>
+        </div>
+    </a>
+  </li>`;
+    }
 }
-exports.default = new ResultsView(); /// the ReseultsView takes the properties and methods from the View
- /// which means we will have access to these values and functions
- /// the View is awaiting _parentElement to perform some functions
- /// but it does not inherantly have that stored on the View itself
- /// so when we passed the parent element in, will give it access to what to pass in
- /// to these functions
+exports.default = new ResultsView(); /// storing the errorMessage in the ResultView top
 
-},{"./View":"1V74g","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["3LJ3w","fstXO"], "fstXO", "parcelRequirea6cc")
+},{"./View":"1V74g","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","url:../../img/icons.svg":"e1R5V"}]},["3LJ3w","fstXO"], "fstXO", "parcelRequirea6cc")
 
 //# sourceMappingURL=index.ec33bf00.js.map
