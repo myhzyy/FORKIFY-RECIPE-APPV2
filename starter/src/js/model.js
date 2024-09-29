@@ -8,6 +8,7 @@ export const state = {
   search: {
     query: '',
     results: [],
+    page: 1,
     resultsPerPage: RES_PER_PAGE,
   },
 };
@@ -58,9 +59,29 @@ export const loadSearchResults = async function (query) {
   }
 };
 
-export const getSearchResultsPage = function (page) {
+export const getSearchResultsPage = function (page = state.search.page) {
+  state.search.page = page;
+
   const start = (page - 1) * state.search.resultsPerPage;
   const end = page * state.search.resultsPerPage;
 
   return state.search.results.slice(start, end);
 };
+
+/// this function is returns the page we are on from what we pass in
+/// by default it is page 1
+
+/// const start = page (1) - 1, which is 0, and then times it by 10
+/// this is 0
+
+/// const end = page (1), and then times it by 10, this is 10
+
+/// return slice of start,end
+
+/// this returns 1-9 as the slice doesn't return the last value
+
+/// this is slices the results array that we pass in
+
+/// example, if we type in page 1, this will show 0-9
+
+/// page 2 would show 10, and 20

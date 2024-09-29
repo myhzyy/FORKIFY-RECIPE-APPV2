@@ -593,6 +593,8 @@ var _searchViewJs = require("./Views/searchView.js");
 var _searchViewJsDefault = parcelHelpers.interopDefault(_searchViewJs);
 var _resultsViewJs = require("./Views/resultsView.js");
 var _resultsViewJsDefault = parcelHelpers.interopDefault(_resultsViewJs);
+var _paginationViewJs = require("./Views/paginationView.js");
+var _paginationViewJsDefault = parcelHelpers.interopDefault(_paginationViewJs);
 var _runtime = require("regenerator-runtime/runtime");
 if (module.hot) module.hot.accept();
 const controlRecipes = async function() {
@@ -619,19 +621,25 @@ const controlSearchResults = async function() {
         await _modelJs.loadSearchResults(query);
         // 3 Render results
         // resultsView.render(model.state.search.results);
-        (0, _resultsViewJsDefault.default).render(_modelJs.getSearchResultsPage(1));
+        (0, _resultsViewJsDefault.default).render(_modelJs.getSearchResultsPage(4));
+        /// Render inital pagination buttons
+        (0, _paginationViewJsDefault.default).render(_modelJs.state.search);
     } catch (err) {
         console.log(err);
     }
 };
-controlSearchResults();
+// controlSearchResults();
+const controlPagination = function() {
+    console.log("pag controller");
+};
 const init = function() {
     (0, _recipeViewJsDefault.default).addHandlerRender(controlRecipes);
     (0, _searchViewJsDefault.default).addHandlerSearch(controlSearchResults);
+    (0, _paginationViewJsDefault.default).addHandlerClick(controlPagination);
 };
 init();
 
-},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","core-js/modules/web.immediate.js":"49tUX","regenerator-runtime/runtime":"dXNgZ","./model.js":"aa1aw","./Views/recipeView.js":"o02Y5","./Views/searchView.js":"25sBR","./Views/resultsView.js":"9dRvK"}],"gkKU3":[function(require,module,exports) {
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","core-js/modules/web.immediate.js":"49tUX","regenerator-runtime/runtime":"dXNgZ","./model.js":"aa1aw","./Views/recipeView.js":"o02Y5","./Views/searchView.js":"25sBR","./Views/resultsView.js":"9dRvK","./Views/paginationView.js":"iaF6b"}],"gkKU3":[function(require,module,exports) {
 exports.interopDefault = function(a) {
     return a && a.__esModule ? a : {
         default: a
@@ -2513,6 +2521,7 @@ const state = {
     search: {
         query: "",
         results: [],
+        page: 1,
         resultsPerPage: (0, _config.RES_PER_PAGE)
     }
 };
@@ -2556,11 +2565,21 @@ const loadSearchResults = async function(query) {
         throw err;
     }
 };
-const getSearchResultsPage = function(page) {
+const getSearchResultsPage = function(page = state.search.page) {
+    state.search.page = page;
     const start = (page - 1) * state.search.resultsPerPage;
     const end = page * state.search.resultsPerPage;
     return state.search.results.slice(start, end);
-};
+}; /// this function is returns the page we are on from what we pass in
+ /// by default it is page 1
+ /// const start = page (1) - 1, which is 0, and then times it by 10
+ /// this is 0
+ /// const end = page (1), and then times it by 10, this is 10
+ /// return slice of start,end
+ /// this returns 1-9 as the slice doesn't return the last value
+ /// this is slices the results array that we pass in
+ /// example, if we type in page 1, this will show 0-9
+ /// page 2 would show 10, and 20
 
 },{"@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./config":"70DKu","regenerator-runtime":"dXNgZ","./helpers":"5MiOq"}],"70DKu":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
@@ -3011,6 +3030,7 @@ class View {
     render(data) {
         if (!data || Array.isArray(data) && data.length === 0) return this.renderError();
         this._data = data;
+        console.log(this._data);
         const markup = this._generateMarkup();
         this._clear();
         this._parentElement.insertAdjacentHTML("afterbegin", markup);
@@ -3113,6 +3133,84 @@ class ResultsView extends (0, _viewDefault.default) {
 }
 exports.default = new ResultsView(); /// storing the errorMessage in the ResultView top
 
-},{"./View":"1V74g","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","url:../../img/icons.svg":"e1R5V"}]},["3LJ3w","fstXO"], "fstXO", "parcelRequirea6cc")
+},{"./View":"1V74g","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","url:../../img/icons.svg":"e1R5V"}],"iaF6b":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _view = require("./View");
+var _viewDefault = parcelHelpers.interopDefault(_view);
+var _iconsSvg = require("url:../../img/icons.svg");
+var _iconsSvgDefault = parcelHelpers.interopDefault(_iconsSvg);
+class PaginationView extends (0, _viewDefault.default) {
+    _parentElement = document.querySelector(".pagination");
+    addHandlerClick(handler) {
+        this._parentElement.addEventListener("click", function(e) {
+            const btn = e.target.closest(".btn--inline");
+            console.log(btn);
+            const goToPage = btn.dataset.goto;
+            console.log(goToPage);
+            handler();
+        });
+    }
+    _generateMarkup() {
+        const curPage = this._data.page;
+        console.log(curPage);
+        /// curPage is equal to whatever we pass in
+        const numPages = Math.ceil(this._data.results.length / this._data.resultsPerPage);
+        console.log(numPages);
+        /// the numbers of results we get, divided by 10
+        /// which is how many results we want on the page
+        /// for example, if we get 59 results, and divied that by 10
+        /// this will give us 6 pages once rounded up
+        // Page 1, and there are other pages
+        if (curPage === 1 && numPages > 1) return `
+      
+      <button data-goto="${curPage + 1}" class="btn--inline pagination__btn--next">
+            <span>${curPage + 1}</span>
+            <svg class="search__icon">
+              <use href="${0, _iconsSvgDefault.default}#icon-arrow-right"></use>
+            </svg>
+          </button>
+      `;
+        /// if the curPage is = 1, and the amount of number of pages is greater than 1
+        /// then return curPage +1, which shows page 2
+        // Last page
+        if (curPage === numPages && numPages > 1) return `
+
+      <button data-goto="${curPage - 1}" class="btn--inline pagination__btn--prev">
+      <svg class="search__icon">
+        <use href="${0, _iconsSvgDefault.default}#icon-arrow-left"></use>
+      </svg>
+      <span>${curPage - 1}</span>
+    </button>
+      `;
+        /// if the current page is 6, and that is equal to 6 pages
+        /// and the number of pages is greater than one
+        /// this this will be the last page
+        // Other page
+        if (curPage < numPages) return `
+      <button data-goto="${curPage - 1}" class="btn--inline pagination__btn--prev">
+      <svg class="search__icon">
+        <use href="${0, _iconsSvgDefault.default}#icon-arrow-left"></use>
+      </svg>
+      <span>${curPage - 1}</span>
+    </button> 
+
+      
+    <button data-goto="${curPage + 1}" class="btn--inline pagination__btn--next">
+    <span>${curPage + 1}</span>
+    <svg class="search__icon">
+      <use href="${0, _iconsSvgDefault.default}#icon-arrow-right"></use>
+    </svg>
+  </button>
+      
+      
+      `;
+        // Page 1, and there are NO other pages
+        return "";
+    }
+}
+exports.default = new PaginationView();
+
+},{"./View":"1V74g","url:../../img/icons.svg":"e1R5V","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["3LJ3w","fstXO"], "fstXO", "parcelRequirea6cc")
 
 //# sourceMappingURL=index.ec33bf00.js.map
