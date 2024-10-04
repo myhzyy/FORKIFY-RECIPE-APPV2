@@ -68,20 +68,12 @@ export const getSearchResultsPage = function (page = state.search.page) {
   return state.search.results.slice(start, end);
 };
 
-/// this function is returns the page we are on from what we pass in
-/// by default it is page 1
+export const updateServings = function (newServings) {
+  state.recipe.ingredients.forEach(ing => {
+    ing.quantity = (ing.quantity * newServings) / state.recipe.servings;
 
-/// const start = page (1) - 1, which is 0, and then times it by 10
-/// this is 0
+    /// newQt = oldQt * newServiings / oldServings
+  });
 
-/// const end = page (1), and then times it by 10, this is 10
-
-/// return slice of start,end
-
-/// this returns 1-9 as the slice doesn't return the last value
-
-/// this is slices the results array that we pass in
-
-/// example, if we type in page 1, this will show 0-9
-
-/// page 2 would show 10, and 20
+  state.recipe.servings = newServings;
+};

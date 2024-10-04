@@ -7,7 +7,7 @@ class ResultsView extends View {
   _message = '';
 
   _generateMarkup() {
-    console.log(this._data);
+    // console.log(this._data);
     return this._data.map(this._generateMarkupPreview).join('');
   }
 
@@ -29,4 +29,14 @@ class ResultsView extends View {
 
 export default new ResultsView();
 
-/// storing the errorMessage in the ResultView top
+/// resultsView . render
+
+/// we take the results View, and run the method of render on it
+/// the render method stores this.data, calls this generateMarkup
+/// whilst saving it to const markup
+/// runs clear on the preview markup
+/// and appends the HTML of the generateMarkup
+
+/// this means that the generateMark up from the resultsView gets put on the apge
+
+/// we get the data from whatever we pass in when we call it

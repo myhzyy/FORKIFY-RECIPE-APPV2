@@ -14,6 +14,20 @@ export default class View {
     this._parentElement.insertAdjacentHTML('afterbegin', markup);
   }
 
+  update(data) {
+    if (!data || (Array.isArray(data) && data.length === 0))
+      return this.renderError();
+
+    this._data = data;
+    const newMmarkup = this._generateMarkup();
+
+    const newDOM = document.createRange().createContextualFragment(newMmarkup);
+    const newElements = newDOM.querySelectorAll('*');
+    console.log(newElements);
+
+    /// newDOM will become an object
+  }
+
   _clear() {
     this._parentElement.innerHTML = '';
   }
@@ -65,3 +79,5 @@ export default class View {
 /// amongst the Views
 
 ///
+
+console.log(View);

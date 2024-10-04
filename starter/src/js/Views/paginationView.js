@@ -7,14 +7,18 @@ class PaginationView extends View {
   addHandlerClick(handler) {
     this._parentElement.addEventListener('click', function (e) {
       const btn = e.target.closest('.btn--inline');
-      console.log(btn);
 
-      const goToPage = btn.dataset.goto;
-      console.log(goToPage);
+      if (!btn) return;
 
-      handler();
+      const goToPage = +btn.dataset.goto;
+
+      handler(goToPage);
     });
   }
+
+  /// we add the data and call it -goto, and add the link of that page
+  /// that means whenever we click a button, it logs that number
+  /// for example, page 3 will log the number 3
 
   _generateMarkup() {
     const curPage = this._data.page;
@@ -25,8 +29,6 @@ class PaginationView extends View {
     const numPages = Math.ceil(
       this._data.results.length / this._data.resultsPerPage
     );
-
-    console.log(numPages);
 
     /// the numbers of results we get, divided by 10
     /// which is how many results we want on the page
