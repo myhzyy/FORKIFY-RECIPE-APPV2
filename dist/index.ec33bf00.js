@@ -602,6 +602,8 @@ const controlRecipes = async function() {
         const id = window.location.hash.slice(1);
         if (!id) return;
         (0, _recipeViewJsDefault.default).renderSpinner();
+        // 0: Update results view to mark selected search reults
+        (0, _resultsViewJsDefault.default).update(_modelJs.getSearchResultsPage());
         /// 1 Loading recipe
         await _modelJs.loadRecipe(id);
         console.log(_modelJs.state.recipe);
@@ -621,7 +623,7 @@ const controlSearchResults = async function() {
         await _modelJs.loadSearchResults(query);
         // 3 Render results
         // resultsView.render(model.state.search.results);
-        (0, _resultsViewJsDefault.default).render(_modelJs.getSearchResultsPage(3));
+        (0, _resultsViewJsDefault.default).render(_modelJs.getSearchResultsPage());
         /// Render inital pagination buttons
         (0, _paginationViewJsDefault.default).render(_modelJs.state.search);
     } catch (err) {
@@ -2758,7 +2760,6 @@ var _iconsSvgDefault = parcelHelpers.interopDefault(_iconsSvg);
 class View {
     _data;
     render(data) {
-        if (!data || Array.isArray(data) && data.length === 0) return this.renderError();
         this._data = data;
         console.log(this._data);
         const markup = this._generateMarkup();
@@ -2770,8 +2771,18 @@ class View {
         this._data = data;
         const newMmarkup = this._generateMarkup();
         const newDOM = document.createRange().createContextualFragment(newMmarkup);
-        const newElements = newDOM.querySelectorAll("*");
+        const newElements = Array.from(newDOM.querySelectorAll("*"));
+        const curElement = Array.from(this._parentElement.querySelectorAll("*"));
+        console.log(curElement);
         console.log(newElements);
+        newElements.forEach((newEl, i)=>{
+            const curEl = curElement[i];
+            // console.log(curEl, newEl.isEqualNode(curEl));
+            //// Updates changed TEXT
+            if (!newEl.isEqualNode(curEl) && newEl.firstChild.nodeValue.trim() !== "") curEl.textContent = newEl.textContent;
+            //// Updates changed ATTRIBUTES
+            if (!newEl.isEqualNode(curEl)) Array.from(newEl.attributes).forEach((attr)=>curEl.setAttribute(attr.name, attr.value));
+        });
     /// newDOM will become an object
     }
     _clear() {
@@ -3149,9 +3160,11 @@ class ResultsView extends (0, _viewDefault.default) {
         return this._data.map(this._generateMarkupPreview).join("");
     }
     _generateMarkupPreview(result) {
+        const id = window.location.hash.slice(1);
+        console.log(id);
         return `
     <li class="preview">
-    <a class="preview__link" href="#${result.id}">
+    <a class="preview__link ${result.id === id ? `preview__link preview__link--active` : ""}  " href="#${result.id}">
       <figure class="preview__fig">
         <img src="${result.image}" alt="${result.title}" />
       </figure>
@@ -3163,14 +3176,7 @@ class ResultsView extends (0, _viewDefault.default) {
   </li>`;
     }
 }
-exports.default = new ResultsView(); /// resultsView . render
- /// we take the results View, and run the method of render on it
- /// the render method stores this.data, calls this generateMarkup
- /// whilst saving it to const markup
- /// runs clear on the preview markup
- /// and appends the HTML of the generateMarkup
- /// this means that the generateMark up from the resultsView gets put on the apge
- /// we get the data from whatever we pass in when we call it
+exports.default = new ResultsView();
 
 },{"./View":"1V74g","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","url:../../img/icons.svg":"e1R5V"}],"iaF6b":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");

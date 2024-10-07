@@ -12,9 +12,14 @@ class ResultsView extends View {
   }
 
   _generateMarkupPreview(result) {
+    const id = window.location.hash.slice(1);
+    console.log(id);
+
     return `
     <li class="preview">
-    <a class="preview__link" href="#${result.id}">
+    <a class="preview__link ${
+      result.id === id ? `preview__link preview__link--active` : ''
+    }  " href="#${result.id}">
       <figure class="preview__fig">
         <img src="${result.image}" alt="${result.title}" />
       </figure>
@@ -28,15 +33,3 @@ class ResultsView extends View {
 }
 
 export default new ResultsView();
-
-/// resultsView . render
-
-/// we take the results View, and run the method of render on it
-/// the render method stores this.data, calls this generateMarkup
-/// whilst saving it to const markup
-/// runs clear on the preview markup
-/// and appends the HTML of the generateMarkup
-
-/// this means that the generateMark up from the resultsView gets put on the apge
-
-/// we get the data from whatever we pass in when we call it
